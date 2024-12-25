@@ -8,6 +8,7 @@
 # https://numpy.org/doc/2.1/reference/index.html
 # https://matplotlib.org/stable/api/index
 # https://habr.com/ru/articles/130581/
+# https://github.com/Meteorych/mrzvis
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -146,14 +147,14 @@ class ImageCompressor:
 
         layer2 = tf.transpose(layer1)
 
-        layer1 = cls.normalize(layer1)
+        layer1 = cls.normalization(layer1)
 
-        layer2 = cls.normalize(layer2)
+        layer2 = cls.normalization(layer2)
 
         return layer1, layer2
 
     @classmethod
-    def normalize(cls, weight):
+    def normalization(cls, weight):
         """
         Normalizes the columns of a weight matrix.
 
@@ -172,17 +173,17 @@ class ImageCompressor:
             where each column has been normalized by its Euclidean norm.
         """
         weight = weight.numpy()
-        denominator = cls.mod_of_vector(weight)
+        denominator = np.sqrt(np.sum(weight**2, axis=0))
 
         for column_index in range(weight.shape[1]):
-            if denominator[column_index] == 0:
-                for row_index in range(weight.shape[0]):
-                    weight[row_index][column_index] = 0
-            else:
-                for row_index in range(weight.shape[0]):
-                    weight[row_index][column_index] = (
-                        weight[row_index][column_index] / denominator[column_index]
-                    )
+            # if denominator[column_index] == 0:
+            #     for row_index in range(weight.shape[0]):
+            #         weight[row_index][column_index] = 0
+            # else:
+            for row_index in range(weight.shape[0]):
+                weight[row_index][column_index] = (
+                    weight[row_index][column_index] / denominator[column_index]
+                )
 
         return tf.convert_to_tensor(weight)
 
@@ -227,8 +228,8 @@ class ImageCompressor:
                     tf.transpose(hidden_layer), diff
                 )
 
-                layer1 = cls.normalize(layer1)
-                layer2 = cls.normalize(layer2)
+                layer1 = cls.normalization(layer1)
+                layer2 = cls.normalization(layer2)
 
             error = sum(
                 tf.reduce_sum((block @ layer1 @ layer2 - block) ** 2)
@@ -241,10 +242,6 @@ class ImageCompressor:
         ) / ((cls.INPUT_SIZE + cls.total_blocks()) * 32 * cls.HIDDEN_SIZE + 2)
         print(f"Compression Ratio: {compression_ratio}")
         return layer1, layer2
-
-    @classmethod
-    def mod_of_vector(cls, vector):
-        return np.sqrt(np.sum(vector**2, axis=0))
 
     @classmethod
     def generate_blocks(cls):
