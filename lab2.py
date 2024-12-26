@@ -6,9 +6,8 @@
 # Ссылки на источники:
 # https://numpy.org/doc/2.1/reference/index.html
 # https://matplotlib.org/stable/api/index
-#
+# https://habr.com/ru/articles/301406
 # https://github.com/Meteorych/mrzvis
-
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -49,6 +48,7 @@ class Hopfield:
 
             # Условие сходимости
             if np.abs(old_w - self.w).sum() < e:
+                print(f"Количество итераций обучения: {_}")
                 break
 
         np.fill_diagonal(self.w, 0)
@@ -118,6 +118,20 @@ alphabet = np.array(
 
 # [-1, -1, -1, 1, -1, 1, 1, -1, -1, 1, 1, -1, -1, -1, -1, 1]
 
+fig, axes = plt.subplots(1, len(alphabet), figsize=(12, 3))  # 1 row, N columns
+
+# Plot each matrix in a subplot
+for i, ax in enumerate(axes):
+    ax.imshow(
+        alphabet[i].reshape((4, 4)), cmap="binary"
+    )  # Use 'binary' colormap for binary matrices
+    ax.set_title(f"Symbol {i+1}")
+    ax.axis("off")  # Hide axes for cleaner visualization
+
+# Adjust layout and display the plot
+plt.tight_layout()
+plt.show()
+
 alphabet = preprocess_alphabet(alphabet)
 network = Hopfield(alphabet, 0.7)
 network.train()
@@ -127,3 +141,23 @@ iterations, predicted_state, _, _ = network.predict(input_image)
 print("Iterations: ", iterations)
 
 display_console_image_result(input_image, predicted_state)
+
+
+# for i in range(self.size):
+#         for j in range(self.size):
+#             if i != j:  # Исключаем диагональные элементы
+#                 activation = np.tanh(
+#                     self.w[i, :] @ x_t
+#                 )  # Скалярное произведение
+#                 self.w[i, j] += (
+#                     (self.nu / self.size)
+#                     * (x_t[j, 0] - activation[0, 0])
+#                     * x_t[i, 0]
+#                 )
+
+#     np.fill_diagonal(
+#         self.w, 0
+#     )  # Диагональные элементы обнуляются, чтобы нейроны не влияли сами на себя.
+
+# if np.linalg.norm(self.w - old_w) < e:
+#     break
